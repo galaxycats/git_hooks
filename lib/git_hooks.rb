@@ -52,6 +52,7 @@ module GitHooks
   
   class Notifier
     require 'xmpp4r'
+    require 'xmpp4r/roster'
     
     include Jabber
     
@@ -61,8 +62,19 @@ module GitHooks
     
     private
     
+      def groups
+        {
+          :galaxy_cats => [
+            "dirk@galaxycats.com",
+            "ethem@galaxycats.com",
+            "andi@galaxycats.com",
+            "basti@galaxycats.com"
+          ]
+        }
+      end
+    
       def create_message(from_commits)
-        message = "The following commits have pushed to the repository 'REPO_NAME':\n"
+        message = "The following commits have pushed to the repository '#{from_commits.repo_name}' on '#{from_commits.ref_name}':\n"
         from_commits.each do |commit|
           message << "\t#{commit.id[0...5]}...: '#{commit.short_message}' by #{commit.author.name}\n"
         end
@@ -73,29 +85,43 @@ module GitHooks
       def jabber_client
         return @cl if @cl
 
-        jid = JID::new('samwise@jabber.org')
-        password = 'PASSWORD'
-        @cl = Client::new(jid)
-        @cl.connect
+        jid = JID.new('codingmonkey@galaxycats.com/Git')
+        password = ';-)'
+        @cl = Client.new(jid)
+        @cl.connect("talk.google.com")
         @cl.auth(password)
 
         @cl
       end
 
       def send_message_to(message, to)
-        subject = "XMPP4R test"
-        m = Message::new(to, message).set_type(:normal).set_id('1').set_subject(subject)
-        jabber_client.send m
+        recipients = [groups[to] || to].flatten
+        
+        recipients.each do |recipient|
+          subject = "Git commit notification"
+          
+          if recipient_needs_authorization?(recipient)
+            request_authorization_of_recipient(recipient)
+          else
+            msg = Message::new(to, message).set_type(:normal).set_id('1').set_subject(subject)
+            jabber_client.send msg
+          end
+        end
+        
       end
       
-      # def repo_name
-      #   splitted_path = Dir.pwd.path.split("/")
-      #   @repo_name = if splitted_path =~ /\.git/ > 0
-      #     splitted_path.last.split(".").first
-      #   else
-      #     splitted_path[-1]
-      #   end
-      # end
+      def recipient_needs_authorization?(recipient)
+        roster = Roster::Helper.new(jabber_client)
+        recipient_jid = JID.new(recipient)
+        !!roster.items[recipient_jid]
+      end
+      
+      def request_authorization_of_recipient(recipient)
+        request = Jabber::Presence.new
+        request.to = recipient
+        request.type = :subscribe
+        jabber_client.send request
+      end
     
   end
   
@@ -118,7 +144,7 @@ module GitHooks
 
       commits = @git_adapter.find_commits_since_last_receive(*params.first.split(" "))
 
-      @notifier.jabber(:commits => commits, :to => "dirk@galaxycats.com")
+      @notifier.jabber(:commits => commits, :to => :galaxy_cats)
     end
     
   end
