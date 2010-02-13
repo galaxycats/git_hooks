@@ -10,9 +10,13 @@ begin
     gem.email = "dirk.breuer@gmail.com"
     gem.homepage = "http://github.com/railsbros/git-hooks"
     gem.authors = ["Dirk Breuer"]
-    gem.add_development_dependency "rspec", ">= 1.2.9"
+    gem.files = FileList["[A-Z]*.*", "lib/**/*"]
+
     gem.add_dependency "grit", ">= 2.0.0"
     gem.add_dependency "activesupport", ">= 3.0.0.beta"
+
+    gem.add_development_dependency "rspec", ">= 1.2.9"
+    gem.add_development_dependency "mocha", ">= 0.9.8"
     # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
   end
   Jeweler::GemcutterTasks.new

@@ -1,6 +1,6 @@
 = git-hooks
 
-Description goes here.
+This is a small library which allows you to easily build Git hooks. The interaction with Git is done through the Grit library, which allows a clean and straight forward Ruby way of talking with Git.
 
 == Note on Patches/Pull Requests
  
