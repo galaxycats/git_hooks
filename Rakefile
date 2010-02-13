@@ -4,13 +4,15 @@ require 'rake'
 begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
-    gem.name = "git-hooks"
-    gem.summary = %Q{TODO: one-line summary of your gem}
-    gem.description = %Q{TODO: longer description of your gem}
+    gem.name = "git_hooks"
+    gem.summary = %Q{A small Gem to provide various Git-Hooks based on Grit.}
+    gem.description = %Q{A small Gem to provide various Git-Hooks based on Grit.}
     gem.email = "dirk.breuer@gmail.com"
     gem.homepage = "http://github.com/railsbros/git-hooks"
     gem.authors = ["Dirk Breuer"]
     gem.add_development_dependency "rspec", ">= 1.2.9"
+    gem.add_dependency "grit", ">= 2.0.0"
+    gem.add_dependency "activesupport", ">= 3.0.0.beta"
     # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
   end
   Jeweler::GemcutterTasks.new
