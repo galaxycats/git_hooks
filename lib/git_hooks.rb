@@ -16,7 +16,24 @@ module GitHooks
     end
     
     def find_commits_since_last_receive(prev_rev, current_rev, ref_name = 'master')
-      @repo.commits_between(prev_rev, current_rev)
+      commits = @repo.commits_between(prev_rev, current_rev)
+      
+      commits.instance_eval <<-METH_RUBY
+      def ref_name
+        "#{ref_name.split("/").last}"
+      end
+      
+      def repo_name
+        splitted_path = "#{@repo.path}".split("/")
+        repo_name = if (splitted_path.last =~ /\.git/) > 0
+          splitted_path.last.split(".").first
+        else
+          splitted_path[-2]
+        end
+      end
+      METH_RUBY
+      
+      return commits
     end
     
     private
@@ -24,8 +41,8 @@ module GitHooks
       def find_git_root
         current_dir = Dir.pwd.split('/')
         while current_dir.last !~ /\.git/
-         current_dir.pop
-         break if current_dir.empty?
+          current_dir.pop
+          break if current_dir.empty?
         end
 
         return current_dir.join('/')
