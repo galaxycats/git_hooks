@@ -3,21 +3,23 @@ module GitHooks
     
     def initialize
       @git_adapter = GitAdapter.new
-      @notifier    = Notifier.new
     end
     
     def run(*args)
-      params = []
+      arguments = read_arguments_from_stdin
+      commits   = @git_adapter.find_commits_since_last_receive(*arguments)
 
-      while params << STDIN.gets
-        break if params.last.nil?
+      Notifier.jabber(:commits => commits, :to => :galaxy_cats)
+    end
+    
+    def read_arguments_from_stdin
+      arguments = []
+      
+      while arguments << STDIN.gets
+        break if arguments.last.nil?
       end
       
-      params.compact!
-
-      commits = @git_adapter.find_commits_since_last_receive(*params.first.split(" "))
-
-      @notifier.jabber(:commits => commits, :to => :galaxy_cats)
+      arguments.compact.first.split(" ")
     end
   end
   
