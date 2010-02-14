@@ -53,8 +53,8 @@ module GitHooks
       private unless $TESTING
       
         def init_jabber_backend!
-          jid      = JID.new('codingmonkey@galaxycats.com/Git')
-          password = ':X'
+          jid      = JID.new('phoenix@galaxycats.com/Git')
+          password = ':m'
 
           @backend = Client.new(jid)
           @backend.connect("talk.google.com")
