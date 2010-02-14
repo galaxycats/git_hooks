@@ -15,26 +15,21 @@ module GitHooks
         end
 
         def subscribed?
-          !@roster[jid]
+          !!@roster[jid]
         end
       end
 
       def initialize
-        jid      = JID.new('codingmonkey@galaxycats.com/Git')
-        password = ':X'
-
-        @backend = Client.new(jid)
-        @backend.connect("talk.google.com")
-        @backend.auth(password)
+        init_jabber_backend!
       end
 
       def groups
         {
           :galaxy_cats => [
-            Buddy.new("dirk@galaxycats.com", roster)
-            # "ethem@galaxycats.com",
-            # "andi@galaxycats.com",
-            # Buddy.new("basti@galaxycats.com", roster)
+            Buddy.new("dirk@galaxycats.com", roster),
+            Buddy.new("andi@galaxycats.com", roster),
+            Buddy.new("ethem@galaxycats.com", roster),
+            Buddy.new("basti@galaxycats.com", roster)
           ]
         }
       end
@@ -44,7 +39,7 @@ module GitHooks
       end
 
       def roster
-        @roster ||= Roster::Helper.new(@backend)
+        @roster ||= Roster::Helper.new(backend)
       end
 
       def send(options)
@@ -52,14 +47,20 @@ module GitHooks
         true
       end
       
-      def request_authorization_of(recipient)
-        request = Jabber::Presence.new
-        request.to = recipient.respond_to?(:jid) ? recipient.jid : recipient
-        request.type = :subscribe
-        @backend.send request
-      end
+      private unless $TESTING
+      
+        def init_jabber_backend!
+          jid      = JID.new('codingmonkey@galaxycats.com/Git')
+          password = ':X'
 
-      # private
+          @backend = Client.new(jid)
+          @backend.connect("talk.google.com")
+          @backend.auth(password)
+        end
+      
+        def backend
+          @backend
+        end
 
         def create_message(from_commits)
           message = "The following commits have pushed to the repository '#{from_commits.repo_name}' on '#{from_commits.ref_name}':\n"
@@ -69,20 +70,24 @@ module GitHooks
 
           message
         end
+        
+        def request_authorization_of(recipient)
+          request      = Jabber::Presence.new
+          request.to   = recipient.respond_to?(:jid) ? recipient.jid : recipient
+          request.type = :subscribe
+          backend.send request
+        end
 
         def send_message_to(message, to)
           recipients = [groups[to] || Buddy.new(to, roster)].flatten
 
-          puts "-- recipients: #{recipients.inspect}"
           recipients.each do |recipient|
-            puts "-- recipient: #{recipient.inspect}"
-            puts "-- is_subscribed?: #{recipient.subscribed?}"
             subject = "Git commit notification"
 
             request_authorization_of(recipient) unless recipient.subscribed?
 
             msg = Message::new(recipient, message).set_type(:normal).set_id('1').set_subject(subject)
-            @backend.send msg
+            backend.send msg
           end
         end
 
