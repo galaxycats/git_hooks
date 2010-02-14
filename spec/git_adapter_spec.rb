@@ -13,7 +13,7 @@ describe "GitAdapter" do
     commits = git_adapter.find_commits_since_last_receive("7eb08614", "58c3455c")
     commits.size.should be(2)
     commits.ref_name.should == "master"
-    commits.repo_name.should == "git_hooks"
+    commits.repo_name.should =~ /git(_|-)hooks/
   end
   
   it "should find commits since last commit" do
