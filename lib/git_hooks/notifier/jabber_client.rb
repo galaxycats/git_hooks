@@ -15,7 +15,10 @@ module GitHooks
         end
 
         def subscribed?
-          !!@roster[jid]
+          roster_item = @roster[jid]
+          if roster_item
+            return roster_item.subscription == :both ? true : false
+          end
         end
       end
 
@@ -63,7 +66,7 @@ module GitHooks
         end
 
         def create_message(from_commits)
-          message = "The following commits have pushed to the repository '#{from_commits.repo_name}' on '#{from_commits.ref_name}':\n"
+          message = "[#{GitHooks::Utils.hostname}] #{from_commits.size} commits have been pushed to '#{from_commits.repo_name}' on '#{from_commits.ref_name}':\n"
           from_commits.each do |commit|
             message << "\t#{commit.id[0...5]}...: '#{commit.short_message}' by #{commit.author.name}\n"
           end
@@ -86,7 +89,8 @@ module GitHooks
 
             request_authorization_of(recipient) unless recipient.subscribed?
 
-            msg = Message::new(recipient, message).set_type(:normal).set_id('1').set_subject(subject)
+            msg = Message::new(recipient.jid, message).set_type(:normal).set_id('1').set_subject(subject)
+            GitHooks::Logger.debug "msg: #{msg}"
             backend.send msg
           end
         end

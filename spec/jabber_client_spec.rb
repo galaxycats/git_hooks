@@ -12,11 +12,11 @@ describe "JabberClient" do
     it "should should know if already subscribed" do
       roster_mock = mock("RosterMock")
 
-      roster_mock.should_receive(:[]).with(Jabber::JID.new("lela.starr@jabber.org")).and_return(true)
+      roster_mock.should_receive(:[]).with(Jabber::JID.new("lela.starr@jabber.org")).and_return(mock("RosterItemMock", :subscription => :both))
       buddy = GitHooks::Notifier::JabberClient::Buddy.new("lela.starr@jabber.org", roster_mock)
       buddy.subscribed?.should be(true)
       
-      roster_mock.should_receive(:[]).with(Jabber::JID.new("lela.starr@jabber.org")).and_return(nil)
+      roster_mock.should_receive(:[]).with(Jabber::JID.new("lela.starr@jabber.org")).and_return(mock("RosterItemMock", :subscription => :none))
       buddy = GitHooks::Notifier::JabberClient::Buddy.new("lela.starr@jabber.org", roster_mock)
       buddy.subscribed?.should be(false)
     end
@@ -71,6 +71,7 @@ describe "JabberClient" do
     commits.should_receive(:ref_name).and_return("master")
     commits.should_receive(:repo_name).and_return("git_hooks")
     commits.should_receive(:each).and_yield(commit)
+    commits.should_receive(:size).and_return(1)
     
     jabber_client.create_message(commits)
   end
@@ -85,7 +86,7 @@ describe "JabberClient" do
     
     GitHooks::Notifier::JabberClient::Buddy.should_receive(:new).
       with("lela.starr@jabber.org", roster_mock).
-      and_return(buddy = mock("BuddyMock", :subscribed? => false))
+      and_return(buddy = mock("BuddyMock", :subscribed? => false, :jid => "lela.starr@jabber.org"))
       
     jabber_client.should_receive(:request_authorization_of).with(buddy)
     

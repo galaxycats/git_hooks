@@ -5,4 +5,6 @@ require 'git_hooks'
 
 # will receive something like this: 034e985b8c1df2869aff99017b66600acb052617 462b4131bf6dd2fea41e3959b2b22380fd10be99 refs/heads/master
 
+GitHooks::Logger.info "running hooks (#{File.basename(__FILE__)}) ..."
+
 GitHooks.run_hook(:post_receive)
