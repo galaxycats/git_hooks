@@ -6,13 +6,14 @@ begin
   Jeweler::Tasks.new do |gem|
     gem.name = "git_hooks"
     gem.summary = %Q{A small Gem to provide various Git-Hooks based on Grit.}
-    gem.description = %Q{A small Gem to provide various Git-Hooks based on Grit.}
+    gem.description = %Q{The goal is to provide a pluggable hook infrastructure, where you can easily use different hooks for different purposes.}
     gem.email = "dirk.breuer@gmail.com"
     gem.homepage = "http://github.com/railsbros/git-hooks"
     gem.authors = ["Dirk Breuer"]
     gem.files = FileList["[A-Z]*.*", "lib/**/*"]
 
     gem.add_dependency "grit", ">= 2.0.0"
+    gem.add_dependency "xmpp4r", ">= 0.5"
     gem.add_dependency "activesupport", ">= 3.0.0.beta"
 
     gem.add_development_dependency "rspec", ">= 1.2.9"
