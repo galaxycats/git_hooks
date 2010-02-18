@@ -26,15 +26,14 @@ module GitHooks
         init_jabber_backend!
       end
 
-      def groups
-        {
-          :galaxy_cats => [
-            Buddy.new("dirk@galaxycats.com", roster),
-            Buddy.new("andi@galaxycats.com", roster),
-            Buddy.new("ethem@galaxycats.com", roster),
-            Buddy.new("basti@galaxycats.com", roster)
-          ]
-        }
+      def groups(to_send_to)
+        if group = GitHooks::Utils.config.notifier["jabber"]["recipients"][to_send_to]
+          group.map do |recipient|
+            Buddy.new(recipient, roster)
+          end
+        else
+          nil
+        end
       end
       
       def buddies
@@ -53,12 +52,9 @@ module GitHooks
       private unless $TESTING
       
         def init_jabber_backend!
-          jid      = JID.new('phoenix@galaxycats.com/Git')
-          password = ':m'
-
-          @backend = Client.new(jid)
-          @backend.connect("talk.google.com")
-          @backend.auth(password)
+          @backend = Client.new(JID.new(GitHooks::Utils.config.notifier["jabber"]["jid"]))
+          @backend.connect(GitHooks::Utils.config.notifier["jabber"]["server"])
+          @backend.auth(GitHooks::Utils.config.notifier["jabber"]["password"])
         end
       
         def backend
@@ -82,7 +78,7 @@ module GitHooks
         end
 
         def send_message_to(message, to)
-          recipients = [groups[to] || Buddy.new(to, roster)].flatten
+          recipients = [groups(to) || Buddy.new(to, roster)].flatten
 
           recipients.each do |recipient|
             subject = "Git commit notification"

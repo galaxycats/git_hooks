@@ -33,12 +33,23 @@ describe "JabberClient" do
   end
   
   it "should have different groups to send messages to" do
-    GitHooks::Notifier::JabberClient::Buddy.should_receive(:new).at_least(4).times
+    jabber_config = {
+      "jabber" => {
+        "recipients" => {:planetexpress => ["bender.rodriguez@planetexpress.com"]}
+      },
+    }
+    
+    config_mock = mock("Config")
+    config_mock.should_receive(:notifier).and_return(jabber_config)
+    
+    GitHooks::Utils.should_receive(:config).and_return(config_mock)
+    
+    GitHooks::Notifier::JabberClient::Buddy.should_receive(:new).and_return(mock("Buddy"))
     
     GitHooks::Notifier::JabberClient.any_instance.stubs(:init_jabber_backend!)
     jabber_client = GitHooks::Notifier::JabberClient.new
-    jabber_client.should_receive(:roster).at_least(4).times
-    jabber_client.groups.should be_a_kind_of(Hash)
+    jabber_client.should_receive(:roster)
+    jabber_client.groups(:planetexpress).should have_at_least(1).things
   end
   
   it "should have a list of buddies" do
@@ -80,7 +91,7 @@ describe "JabberClient" do
     GitHooks::Notifier::JabberClient.any_instance.stubs(:init_jabber_backend!)
     jabber_client = GitHooks::Notifier::JabberClient.new
     jabber_client.should_receive(:backend).and_return(mock("JabberBackend", :send => true))
-    jabber_client.should_receive(:groups).and_return({})
+    jabber_client.should_receive(:groups).and_return(nil)
 
     jabber_client.should_receive(:roster).and_return(roster_mock = mock("RosterMock"))
     
