@@ -27,7 +27,7 @@ describe "PostReceiveHook" do
     
     post_receive_hooks = [jabber_hook]
     
-    GitHooks::Utils::Config.should_receive(:post_receive_hooks).and_return(post_receive_hooks)
+    GitHooks::Utils.config.should_receive(:post_receive_hooks).and_return(post_receive_hooks)
     
     GitHooks::Notifier::JabberClient.should_receive(:deliver).with({:other_jabber_option => "Option", :commits => commits})
     
