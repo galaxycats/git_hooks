@@ -9,34 +9,72 @@ describe "Utils" do
     
     it "should have read from a config file located in the home directory" do
       File.should_receive(:expand_path).with("~/.git_hooks_config").and_return(path_to_config = "/Users/dbreuer/.git_hooks_config")
-      YAML.should_receive(:load_file).with(path_to_config).and_return({"notifier" => {"jabber" => {"jid" => "jabber@example.com", "password" => "password"}}})
+      YAML.should_receive(:load_file).with(path_to_config).and_return({:post_receive_hooks => [{:jabber => {:jid => "jabber@example.com", :password => "password"}}]})
       
       GitHooks::Utils.config
     end
     
-    it "should provide methods for the top level config elements" do
+    it "should return all available hooks as an array of hook wrapper classes" do
       mocked_config = {
-        "notifier" => {
-          "jabber" => {
-            "jid" => "jabber@example.com",
-            "password" => "password",
-            "recipients" => [
-              "bender.rodriguez@planetexpress.com"
-            ]
+        :post_receive_hooks => [
+          {
+            :jabber => {
+              :jid        => "jabber@example.com",
+              :password   => "password",
+              :recipients => [
+                "bender.rodriguez@planetexpress.com"
+              ]
+            }
           },
-        },
-        "tools" => {
-          "pivotal_tracker" => {
-            "api_key" => "fjan4cru903rc023ndfv0"
+          {
+            :tracker => {
+              :api_key => "fjan4cru903rc023ndfv0"
+            }
           }
-        }
+        ]
       }
       
-      GitHooks::Utils::Config.instance.should_receive(:config).twice.and_return(mocked_config)
+      GitHooks::Utils::Config.instance.should_receive(:config).and_return(mocked_config)
       
-      GitHooks::Utils.config.notifier["jabber"].should equal(mocked_config["notifier"]["jabber"])
-      GitHooks::Utils.config.tools.should equal(mocked_config["tools"])
+      GitHooks::Utils.config.post_receive_hooks.each do |hook|
+        hook.should be_a_kind_of(GitHooks::Utils::Config::HookWrapper)
+      end
     end
+    
+    describe "HookWrapper" do
+      
+      before(:each) do
+        hook_options = {
+          :jabber => {
+            :jid        => "jabber@example.com",
+            :password   => "password",
+            :recipients => [
+              "bender.rodriguez@planetexpress.com"
+            ]
+          }
+        }
+
+        @hook_wrapper = GitHooks::Utils::Config::HookWrapper.new(hook_options)
+      end
+      
+      it "should know its backing class" do
+        @hook_wrapper.hook_class.should == GitHooks::Notifier::JabberClient
+      end
+      
+      it "should know the options for this hook" do
+        expected_options = {
+          :jid        => "jabber@example.com",
+          :password   => "password",
+          :recipients => [
+            "bender.rodriguez@planetexpress.com"
+          ]
+        }
+        
+        @hook_wrapper.options.should == expected_options
+      end
+      
+    end
+    
   end
   
 end
