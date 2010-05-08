@@ -22,17 +22,14 @@ module GitHooks
         end
       end
 
-      def initialize
+      def initialize(jabber_options)
+        @jabber_options = jabber_options
         init_jabber_backend!
       end
 
-      def groups(to_send_to)
-        if group = GitHooks::Utils.config.notifier["jabber"]["recipients"][to_send_to]
-          group.map do |recipient|
-            Buddy.new(recipient, roster)
-          end
-        else
-          nil
+      def create_recipients(recipients)
+        [recipients].flatten.map do |recipient|
+          recipient.is_a?(Buddy) ? recipient : Buddy.new(recipient, roster)
         end
       end
       
@@ -43,18 +40,26 @@ module GitHooks
       def roster
         @roster ||= Roster::Helper.new(backend)
       end
+      
+      def deliver(options)
+        commits    = options.delete(:commits)
+        recipients = options.delete(:recipients)
 
-      def send(options)
-        send_message_to create_message(options[:commits]), options[:to]
+        client_instance = new(options)
+        client_instance.deliver(commits, recipients)
+      end
+
+      def deliver(commits, recipients)
+        send_message_to create_message(commits), recipients
         true
       end
       
       private unless $TESTING
       
         def init_jabber_backend!
-          @backend = Client.new(JID.new(GitHooks::Utils.config.notifier["jabber"]["jid"]))
-          @backend.connect(GitHooks::Utils.config.notifier["jabber"]["server"])
-          @backend.auth(GitHooks::Utils.config.notifier["jabber"]["password"])
+          @backend = Client.new(JID.new(@jabber_options[:jid]))
+          @backend.connect(@jabber_options[:server])
+          @backend.auth(@jabber_options[:password])
         end
       
         def backend
@@ -77,10 +82,8 @@ module GitHooks
           backend.send request
         end
 
-        def send_message_to(message, to)
-          recipients = [groups(to) || Buddy.new(to, roster)].flatten
-
-          recipients.each do |recipient|
+        def send_message_to(message, recipients)
+          create_recipients(recipients).each do |recipient|
             subject = "Git commit notification"
 
             request_authorization_of(recipient) unless recipient.subscribed?

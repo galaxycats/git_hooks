@@ -17,8 +17,7 @@ config_yaml = StringIO.new <<-YAML
     :jid: JABBER_USERNAME
     :password: JABBER_PASSWORD
     :server: JABBER_SERVER
-    :recipients:
-      :group: [ "recipient@jabber.id" ]
+    :recipients: [ "recipient@jabber.id" ]
   
 -  :pivotal_tracker:
     :api_key: API_KEY

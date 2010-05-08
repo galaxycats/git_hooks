@@ -23,38 +23,45 @@ describe "JabberClient" do
     
   end
   
+  before(:each) do
+    @jabber_client_opts = GitHooks.config.post_receive_hooks.first.options
+  end
+  
   it "should initialize with a XMPP client" do
     Jabber::JID.should_receive(:new).and_return(jid_mock = mock("JIDMock"))
     Jabber::Client.should_receive(:new).with(jid_mock).and_return(client_mock = mock("ClientMock"))
-    client_mock.should_receive(:connect).with("talk.google.com")
+    client_mock.should_receive(:connect).with("JABBER_SERVER")
     client_mock.should_receive(:auth)
     
-    jabber_client = GitHooks::Notifier::JabberClient.new
+    jabber_client = GitHooks::Notifier::JabberClient.new(@jabber_client_opts)
   end
   
-  it "should have different groups to send messages to" do
-    jabber_config = {
-      "jabber" => {
-        "recipients" => {:planetexpress => ["bender.rodriguez@planetexpress.com"]}
-      },
-    }
-    
-    config_mock = mock("Config")
-    config_mock.should_receive(:notifier).and_return(jabber_config)
-    
-    GitHooks::Utils.should_receive(:config).and_return(config_mock)
-    
-    GitHooks::Notifier::JabberClient::Buddy.should_receive(:new).and_return(mock("Buddy"))
-    
+  it "should transform a collection of Jabber IDs to Buddy objects" do
     GitHooks::Notifier::JabberClient.any_instance.stubs(:init_jabber_backend!)
-    jabber_client = GitHooks::Notifier::JabberClient.new
+    jabber_client = GitHooks::Notifier::JabberClient.new(@jabber_client_opts)
     jabber_client.should_receive(:roster)
-    jabber_client.groups(:planetexpress).should have_at_least(1).things
+
+
+    jabber_client.create_recipients(["bender.rodriguez@planetexpress.com"]).each do |buddy|
+      buddy.should be_a_kind_of(GitHooks::Notifier::JabberClient::Buddy)
+    end
+  end
+  
+  it "should not transform recipients that are already Buddy objects" do
+    GitHooks::Notifier::JabberClient.any_instance.stubs(:init_jabber_backend!)
+    jabber_client = GitHooks::Notifier::JabberClient.new(@jabber_client_opts)
+    jabber_client.should_receive(:roster)
+
+    buddy = GitHooks::Notifier::JabberClient::Buddy.new("fry@planetexpress.com", nil)
+
+    jabber_client.create_recipients(["bender.rodriguez@planetexpress.com", buddy]).each do |buddy|
+      buddy.should be_a_kind_of(GitHooks::Notifier::JabberClient::Buddy)
+    end
   end
   
   it "should have a list of buddies" do
     GitHooks::Notifier::JabberClient.any_instance.stubs(:init_jabber_backend!)
-    jabber_client = GitHooks::Notifier::JabberClient.new
+    jabber_client = GitHooks::Notifier::JabberClient.new(@jabber_client_opts)
     jabber_client.should_receive(:roster).
       at_least(2).times.
       and_return(roster_mock = mock("RosterMock"))
@@ -71,7 +78,7 @@ describe "JabberClient" do
   
   it "should create a message out of a bunch of commits" do
     GitHooks::Notifier::JabberClient.any_instance.stubs(:init_jabber_backend!)
-    jabber_client = GitHooks::Notifier::JabberClient.new
+    jabber_client = GitHooks::Notifier::JabberClient.new(@jabber_client_opts)
 
     commit = mock("CommitMock")
     commit.should_receive(:id).and_return("c1be3c82cafc755754ee2247ec8dae1e6a64857f")
@@ -89,9 +96,8 @@ describe "JabberClient" do
   
   it "should request a recipient for authorization if she is not a subscribed buddy" do
     GitHooks::Notifier::JabberClient.any_instance.stubs(:init_jabber_backend!)
-    jabber_client = GitHooks::Notifier::JabberClient.new
+    jabber_client = GitHooks::Notifier::JabberClient.new(@jabber_client_opts)
     jabber_client.should_receive(:backend).and_return(mock("JabberBackend", :send => true))
-    jabber_client.should_receive(:groups).and_return(nil)
 
     jabber_client.should_receive(:roster).and_return(roster_mock = mock("RosterMock"))
     
@@ -106,11 +112,11 @@ describe "JabberClient" do
   
   it "should send the notification based on the given options" do
     GitHooks::Notifier::JabberClient.any_instance.stubs(:init_jabber_backend!)
-    jabber_client = GitHooks::Notifier::JabberClient.new
+    jabber_client = GitHooks::Notifier::JabberClient.new(@jabber_client_opts)
     commits = [mock("Commit")]
     jabber_client.should_receive(:create_message).with(commits).and_return(message = "Message")
-    jabber_client.should_receive(:send_message_to).with(message, :galaxy_cats)
-    jabber_client.send(:commits => commits, :to => :galaxy_cats)
+    jabber_client.should_receive(:send_message_to).with(message, "lela.starr@jabber.org")
+    jabber_client.deliver(commits, "lela.starr@jabber.org")
   end
   
 end
