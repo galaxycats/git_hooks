@@ -10,9 +10,21 @@ require 'git_hooks/utils'
 
 module GitHooks
   
-  def self.run_hook(name_of_hook, *args)
-    hook = "GitHooks::#{name_of_hook.to_s.camelize}Hook".constantize.new
-    hook.run(*args)
+  class <<self
+    attr_writer :config_file
+    
+    def config
+      @config_instance ||= Utils::Config.new(config_file)
+    end
+    
+    def config_file
+      @config_file || "~/.git_hooks_config"
+    end
+
+    def run_hook(name_of_hook, *args)
+      hook = "GitHooks::#{name_of_hook.to_s.camelize}Hook".constantize.new
+      hook.run(*args)
+    end
   end
   
 end

@@ -9,7 +9,7 @@ module GitHooks
       arguments = read_arguments_from_stdin
       commits   = @git_adapter.find_commits_since_last_receive(*arguments)
       
-      GitHooks::Utils.config.post_receive_hooks.each do |hook|
+      GitHooks.config.post_receive_hooks.each do |hook|
         hook.hook_class.deliver(hook.options.merge(:commits => commits))
       end
     end

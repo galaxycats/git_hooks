@@ -2,7 +2,6 @@ module GitHooks
   module Utils
 
     class Config
-      include Singleton
       
       class HookWrapper
         
@@ -21,8 +20,12 @@ module GitHooks
       
       attr_reader :config
       
-      def initialize(config_file = "~/.git_hooks_config")
-        @config = YAML.load_file(File.expand_path(config_file))
+      def initialize(config_file)
+        @config = if config_file.respond_to?(:read)
+          YAML.load(config_file.read)
+        else
+          YAML.load_file(File.expand_path(config_file))
+        end
       rescue
         GitHooks::Logger.error("Config File '#{config_file}' couldn't be loaded!")
         raise "Config File '#{config_file}' couldn't be loaded!"

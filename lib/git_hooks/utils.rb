@@ -7,10 +7,6 @@ module GitHooks
       def hostname
         `hostname -s`.strip
       end
-      
-      def config
-        Config.instance
-      end
     end
     
   end
