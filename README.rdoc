@@ -6,17 +6,16 @@ and straight forward Ruby way of talking with Git.
 
 == Config Example
 
-    notifier:
-      jabber:
-        jid: JABBER_USERNAME
-        password: JABBER_PASSWORD
-        server: JABBER_SERVER
-        recipients:
+    :post_receive_hooks:
+    -  :jabber:
+        :jid: JABBER_USERNAME
+        :password: JABBER_PASSWORD
+        :server: JABBER_SERVER
+        :recipients:
           :group: [ "recipient@jabber.id" ]
-
-    tools:
-      pivotal_tracker:
-        api_key: API_KEY
+  
+    -  :pivotal_tracker:
+        :api_key: API_KEY
 
 == Note on Patches/Pull Requests
  

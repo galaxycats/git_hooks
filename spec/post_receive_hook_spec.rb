@@ -10,7 +10,7 @@ describe "PostReceiveHook" do
     arguments.should == ["old_sha", "new_sha", "refs/head/master"]
   end
   
-  it "should promote the received commits through jabber to the galaxy_cats" do
+  it "should promote the received commits to all registered post_receive hooks" do
     post_receive_hook = GitHooks::PostReceiveHook.new
 
     post_receive_hook.should_receive(:read_arguments_from_stdin).
@@ -20,8 +20,16 @@ describe "PostReceiveHook" do
       expects(:find_commits_since_last_receive).
       with("old_sha", "new_sha", "refs/head/master").
       returns(commits = [mock("Commit")])
-      
-    GitHooks::Notifier.should_receive(:jabber).with(:commits => commits, :to => :galaxy_cats)
+
+    jabber_hook = mock("HookMock")
+    jabber_hook.should_receive(:hook_class).and_return(GitHooks::Notifier::JabberClient)
+    jabber_hook.should_receive(:options).and_return({:other_jabber_option => "Option"})
+    
+    post_receive_hooks = [jabber_hook]
+    
+    GitHooks::Utils::Config.should_receive(:post_receive_hooks).and_return(post_receive_hooks)
+    
+    GitHooks::Notifier::JabberClient.should_receive(:deliver).with({:other_jabber_option => "Option", :commits => commits})
     
     post_receive_hook.run
   end

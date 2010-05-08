@@ -8,8 +8,12 @@ module GitHooks
     def run(*args)
       arguments = read_arguments_from_stdin
       commits   = @git_adapter.find_commits_since_last_receive(*arguments)
-
-      Notifier.jabber(:commits => commits, :to => :galaxy_cats)
+      
+      post_receive_hooks = GitHooks::Utils::Config.post_receive_hooks
+      
+      post_receive_hooks.each do |hook|
+        hook.hook_class.deliver(hook.options.merge(:commits => commits))
+      end
     end
     
     def read_arguments_from_stdin
