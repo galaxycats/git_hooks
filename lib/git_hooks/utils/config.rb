@@ -1,3 +1,5 @@
+require 'yaml'
+
 module GitHooks
   module Utils
 
@@ -26,7 +28,7 @@ module GitHooks
         else
           YAML.load_file(File.expand_path(config_file))
         end
-      rescue
+      rescue Errno::ENOENT
         GitHooks::Logger.error("Config File '#{config_file}' couldn't be loaded!")
         raise "Config File '#{config_file}' couldn't be loaded!"
       end
