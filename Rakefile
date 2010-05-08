@@ -14,6 +14,7 @@ begin
 
     gem.add_dependency "grit", ">= 2.0.0"
     gem.add_dependency "xmpp4r", ">= 0.5"
+    gem.add_dependency "curb", ">= 0.7.1"
     gem.add_dependency "activesupport", ">= 3.0.0.beta"
 
     gem.add_development_dependency "rspec", ">= 1.2.9"
