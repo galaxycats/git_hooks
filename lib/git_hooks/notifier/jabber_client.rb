@@ -41,7 +41,7 @@ module GitHooks
         @roster ||= Roster::Helper.new(backend)
       end
       
-      def deliver(options)
+      def self.deliver(options)
         commits    = options.delete(:commits)
         recipients = options.delete(:recipients)
 
