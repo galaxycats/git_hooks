@@ -1,5 +1,7 @@
 $:.unshift File.dirname(__FILE__) # For use/testing when no gem is installed
 
+require 'active_support/core_ext/string'
+
 require 'git_hooks/notifier'
 require 'git_hooks/git_adapter'
 require 'git_hooks/post_receive_hook'

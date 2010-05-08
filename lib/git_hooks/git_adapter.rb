@@ -1,5 +1,4 @@
 require 'grit'
-require 'active_support/core_ext/string'
 
 module GitHooks
   class GitAdapter
